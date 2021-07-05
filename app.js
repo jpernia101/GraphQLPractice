@@ -1,65 +1,43 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-//middleware function that help setup or graphql endpoint
-const {graphqlHTTP} = require('express-graphql');
 
+//middleware function that help setup or graphql endpoint
+
+const {graphqlHTTP} = require('express-graphql');
+//has keywords like schema and mutations that turn the string into ..well.. schemas and mutations lol
 const {buildSchema} = require('graphql');
 
-const app = express();
+const mongoose = require('mongoose');
+const graphQlSchema = require('./graphql/schema/index');
+const graphQlResolvers = require('./graphql/resolvers/index');
 
-const events = [];
+const isAuth = require('./middleware/is-auth')
+const app = express();
 
 app.use(bodyParser.json());
 
+//our middleware isAuth will run on every incoming request
+app.use(isAuth);
+
+
+
 //we only need one endpoint
 //this will pass down request to ur graphql
-app.use('/graphql', graphqlHTTP({
-    schema: buildSchema(`
-        type Event{
-            _id: ID!
-            title: String!
-            description: String!
-            price: Float!
-            date: String!
-        }
-        
-        input EventInput{
-            title: String!
-            description: String!
-            price: Float!
-            date: String!
-        }
 
-        type RootQuery{
-            events: [Event!]!
-        }
-        type RootMutation{
-            createEvent(eventInput: EventInput): Event
-        }
-        schema {
-            query:RootQuery
-            mutation:RootMutation
-        }
-    `),
+app.use('/graphql', graphqlHTTP({
+    //first parameter is the schema , 2nd is the resolvers, 3rd gives you access to graphiql
+    schema: graphQlSchema,
     //bundle of all the resolvers
-    rootValue: {
-        events: () => {
-            return events;
-        },
-        createEvent: (args) => {
-            const event = {
-                _id: Math.random().toString(),
-                title : args.eventInput.title,
-                description: args.eventInput.description,
-                price: +args.eventInput.price,
-                date: args.eventInput.date
-            }
-            events.push(event)
-            return event;
-        }
-    },
+    rootValue:graphQlResolvers,
     graphiql: true
 }));
 
-app.listen(3000);
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@graphqlpractice.1g6za.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`)
+.then(()=> {
+    app.listen(3000);
+})
+.catch(ERR => {
+    console.log(err);
+});
+
 
