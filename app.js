@@ -16,6 +16,18 @@ const app = express();
 
 app.use(bodyParser.json());
 
+
+//method to handle CORS policy issue
+app.use((req,res,next) =>{
+   res.setHeader('Access-Control-Allow-Origin', '*') ;
+   res.setHeader('Access-Control-Allow-Method', 'POST,GET,OPTIONS') ;
+   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization') ;
+   if(req.method === 'OPTIONS'){
+       return res.sendStatus(200);
+   }
+   next();
+})
+
 //our middleware isAuth will run on every incoming request
 app.use(isAuth);
 
@@ -34,7 +46,7 @@ app.use('/graphql', graphqlHTTP({
 
 mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@graphqlpractice.1g6za.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`)
 .then(()=> {
-    app.listen(3000);
+    app.listen(8000);
 })
 .catch(ERR => {
     console.log(err);
