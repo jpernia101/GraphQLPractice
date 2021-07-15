@@ -1,9 +1,12 @@
 import React , {Component} from 'react'
 import './Auth.css'
+import AuthContext from '../context/auth-context'
 class AuthPage extends Component{
     state = {
         isLogin :true
     };
+
+    static contextType = AuthContext;
 
     constructor(props){
         super(props);
@@ -30,6 +33,7 @@ class AuthPage extends Component{
                 query{
                     login(email:"${email}",password:"${password}"){
                         token
+                        userId
                         tokenExpiration
                     }
                 }
@@ -60,13 +64,17 @@ class AuthPage extends Component{
                 'Content-Type': 'application/json'
             }
         }).then(res => {
-            if(res.status != 200 && res.status != 201){
+            if(res.status !== 200 && res.status !== 201){
                 throw new Error('Failed');
             }
             return res.json();
         })
         .then( resData => {
             console.log(resData);
+            if(resData.data.login.token){
+                this.context.login(resData.data.login.token, resData.data.login.userId,resData.data.login.tokenExpiration);
+                
+            }
         })
         .catch(err =>{
             console.log(err)
