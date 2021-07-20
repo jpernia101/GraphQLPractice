@@ -2,10 +2,13 @@ import React , {Component} from 'react'
 import AuthContext from '../context/auth-context'
 import Spinner from '../components/Spinner/Spinner'
 import BookingList from '../components/Bookings/BookingList/BookingList'
+import BookingsChart from '../components/Bookings/BookingsChart/BookingsChart'
+import BookingsControls from '../components/Bookings/BookingsControls/BookingControls'
 class BookingsPage extends Component{
     state ={
         isLoading:false,
-        bookings: []
+        bookings: [],
+        outputType :'list'
     }
 
     static contextType = AuthContext;
@@ -25,6 +28,7 @@ class BookingsPage extends Component{
                             _id
                             title
                             date
+                            price
                         }
                     }
                 }
@@ -101,12 +105,38 @@ class BookingsPage extends Component{
             this.setState({isLoading:false});
         });
     }
+
+    changeOutputTypeHandler = (outputType) => {
+        if(outputType === 'list'){
+            this.setState({outputType:'list'})
+        }
+        else{
+            this.setState({outputType:'chart'})
+        }
+    }
     render(){
+        let content = <Spinner/>;
+        if(!this.state.isLoading){
+            content = (
+                <React.Fragment>
+                    <BookingsControls 
+                        activeOutputType={this.state.outputType}
+                        onChange={this.changeOutputTypeHandler}
+                    />
+                    <div>
+                        {this.state.outputType === 'list' ? 
+                            <BookingList 
+                                bookings={this.state.bookings} 
+                                onDelete={this.deleteBookingHandler}
+                            /> :
+                            <BookingsChart bookings={this.state.bookings}/>}
+                    </div>
+                </React.Fragment>
+            )
+        }
         return(
             <React.Fragment>
-                {this.state.isLoading ? <Spinner/> : (
-                    <BookingList bookings={this.state.bookings} onDelete={this.deleteBookingHandler}/>
-                )}
+                {content}
                 
             </React.Fragment>
         )
